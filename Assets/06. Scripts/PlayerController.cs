@@ -9,8 +9,11 @@ public class PlayerController : MonoBehaviour
     public float defaultTime = 0.5f;
     private float dashTime;
     private float gravity;
+    private float wallJumpSpeed = 1f;
 
     private int jumpCount = 0;
+    public float dashCooldown = 1f;  // 대시 쿨타임 (1초)
+    private float dashCooldownTimer = 0f;  // 현재 대시 쿨타임 타이머
 
     private bool isGrounded = false;
     private bool isWalking = false;
@@ -24,6 +27,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rigid;
     private SpriteRenderer spriteRenderer;
     private Animator anim;
+    private BoxCollider2D body;
 
     //  잔상 효과 관련 변수
     public GameObject ghostPrefab;
@@ -35,6 +39,7 @@ public class PlayerController : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        body = GetComponent<BoxCollider2D>();
 
         ghostDelayTime = 0;  // 처음부터 바로 잔상이 생성되도록 수정!
         gravity = rigid.gravityScale;
@@ -45,7 +50,7 @@ public class PlayerController : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
 
         // 대시 중이 아닐 때만 이동 가능
-        if (!isDash || !isGrap)
+        if (!isDash && !isGrap)
         {
             if (h != 0)
             {
@@ -65,21 +70,30 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 점프 중이 아닐 때에만 
-        // 대쉬 입력 처리
-        if (Input.GetKeyDown(KeyCode.X) && dashTime <= 0)
+        // 대시 쿨타임 타이머 감소
+        if (dashCooldownTimer > 0)
         {
-            isDash = true;
-            dashTime = defaultTime;
-
-            // 대시 방향 설정 (입력이 없으면 마지막 방향 사용)
-            Vector2 dashDirection = (h != 0) ? new Vector2(h, 0f).normalized : lastMoveDirection;
-
-            // 중력을 0으로 처리 (대시 중에는 밑으로 떨어지지 않게!)
-            rigid.gravityScale = 0;
-            // 대시 실행
-            rigid.linearVelocity = new Vector2(dashDirection.x * dashSpeed, 0f);
+            dashCooldownTimer -= Time.deltaTime;
         }
+
+        // 점프 중이 아닐 때에만 
+        // 대시 입력 처리 (쿨타임이 0 이하일 때만)
+    if (Input.GetKeyDown(KeyCode.X) && dashTime <= 0 && dashCooldownTimer <= 0 && !isGrap)
+    {
+        isDash = true;
+        dashTime = defaultTime;
+
+        // 대시 방향 설정 (입력이 없으면 마지막 방향 사용)
+        Vector2 dashDirection = (h != 0) ? new Vector2(h, 0f).normalized : lastMoveDirection;
+
+        // 중력을 0으로 처리 (대시 중에는 밑으로 떨어지지 않게!)
+        rigid.gravityScale = 0;
+        // 대시 실행
+        rigid.linearVelocity = new Vector2(dashDirection.x * dashSpeed, 0f);
+
+        // 대시 후 쿨타임 시작
+        dashCooldownTimer = dashCooldown;
+    }
 
         // 대쉬 실행 및 종료 처리
         if (isDash)
@@ -115,11 +129,20 @@ public class PlayerController : MonoBehaviour
         // 벽에 달라붙는 처리
         if (isGrap == true)
         {
-            
             rigid.gravityScale = 0f;
             rigid.linearVelocity = Vector2.zero;
+
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                isGrap = false;
+                isGrounded = false;
+
+                // 벽 점프 방향 설정 (현재 붙어있는 벽 방향의 반대)
+                float jumpDirection = spriteRenderer.flipX ? 1f : -1f; // 왼쪽 벽에 붙어있으면 오른쪽으로 점프
+                rigid.gravityScale = gravity; // 중력 복구
+                rigid.linearVelocity = new Vector2(jumpDirection * wallJumpSpeed, jumpForce * 0.005f); // 반대 방향으로 점프
+            }
         }
-        
 
         // 낙하 상태 체크
         isFalling = rigid.linearVelocity.y < 0;
@@ -142,12 +165,17 @@ public class PlayerController : MonoBehaviour
             jumpCount = 0;
         }
 
-        if (collision.collider.tag == "Wall")
+        // 플레이어의 충돌한 콜라이더가 BoxCollider2D인지 확인
+        if (collision.otherCollider is BoxCollider2D)
         {
-            if (collision.contacts[0].normal.x > 0.7f || collision.contacts[0].normal.x < 0.7)
+            Vector2 normal = collision.contacts[0].normal;
+
+            // 벽과 충돌한 경우 (수직 벽)
+            if (Mathf.Abs(normal.x) > 0.5f && Mathf.Abs(normal.y) < 0.5f)
             {
                 rigid.linearVelocity = lastMoveDirection;
                 isGrap = true;
+                Debug.Log("Grab onto Wall with BoxCollider2D!");
             }
         }
     }
