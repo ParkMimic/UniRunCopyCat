@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
 
         // 대시 중이 아닐 때만 이동 가능
-        if (!isDash && !isGrap)
+        if (!isDash && !isGrap && !isDead)
         {
             if (h != 0)
             {
@@ -110,7 +110,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // 점프 처리
-        if (Input.GetKeyDown(KeyCode.Z) && jumpCount < 2)
+        if (Input.GetKeyDown(KeyCode.Z) && jumpCount < 2 && !isDead)
         {
             jumpCount++;
             rigid.linearVelocity = new Vector2(rigid.linearVelocity.x, 0); // 기존 속도 초기화
@@ -132,6 +132,8 @@ public class PlayerController : MonoBehaviour
             rigid.gravityScale = 0f;
             rigid.linearVelocity = Vector2.zero;
 
+            jumpCount = 1;
+
             if (Input.GetKeyDown(KeyCode.Z))
             {
                 isGrap = false;
@@ -142,6 +144,11 @@ public class PlayerController : MonoBehaviour
                 rigid.gravityScale = gravity; // 중력 복구
                 rigid.linearVelocity = new Vector2(jumpDirection * wallJumpSpeed, jumpForce * 0.005f); // 반대 방향으로 점프
             }
+        }
+
+        if (isDead)
+        {
+            rigid.linearVelocity = new Vector2(0f, rigid.linearVelocityY);
         }
 
         // 낙하 상태 체크
@@ -171,11 +178,10 @@ public class PlayerController : MonoBehaviour
             Vector2 normal = collision.contacts[0].normal;
 
             // 벽과 충돌한 경우 (수직 벽)
-            if (Mathf.Abs(normal.x) > 0.5f && Mathf.Abs(normal.y) < 0.5f)
+            if (Mathf.Abs(normal.x) > 0.5f && Mathf.Abs(normal.y) < 0.5f && isGrounded == false)
             {
                 rigid.linearVelocity = lastMoveDirection;
                 isGrap = true;
-                Debug.Log("Grab onto Wall with BoxCollider2D!");
             }
         }
     }
@@ -194,12 +200,19 @@ public class PlayerController : MonoBehaviour
         {
             Die();
         }
+
+        if (collision.name == "Coin")
+        {
+            collision.GameObject().SetActive(false);
+            GameManager.instance.OnTrigger();
+        }
     }
 
     void Die()
     {
         isDead = true;
         rigid.linearVelocity = Vector2.zero;
+        GameManager.instance.OnPlayerDead();
         anim.SetTrigger("isDead");
     }
 
