@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded = false;
     private bool isWalking = false;
     private bool isFalling = false;
-    private bool isDead = false;
+    private bool isDead;
     private bool isDash = false;
     private bool isJumping = false;
     private bool isGrap = false;
@@ -43,6 +43,8 @@ public class PlayerController : MonoBehaviour
 
         ghostDelayTime = 0;  // 처음부터 바로 잔상이 생성되도록 수정!
         gravity = rigid.gravityScale;
+
+        isDead = false;
     }
 
     void Update()
@@ -54,11 +56,13 @@ public class PlayerController : MonoBehaviour
         {
             if (h != 0)
             {
-                rigid.linearVelocity = new Vector2(h * speed, rigid.linearVelocity.y);
+                //rigid.linearVelocity = new Vector2(h * speed, rigid.linearVelocity.y);
+                rigid.linearVelocityX = h * speed;
                 isWalking = true;
 
                 // 이동 방향 저장
-                lastMoveDirection = new Vector2(h, 0).normalized;
+                //lastMoveDirection = new Vector2(h, 0).normalized;
+                lastMoveDirection = new Vector2(h, rigid.linearVelocityY).normalized;
 
                 // 이동 방향에 따른 뒤집기
                 spriteRenderer.flipX = h < 0;
@@ -66,7 +70,8 @@ public class PlayerController : MonoBehaviour
             else
             {
                 isWalking = false;
-                rigid.linearVelocity = new Vector2(0, rigid.linearVelocity.y); // 멈추기
+                //rigid.linearVelocity = new Vector2(0, rigid.linearVelocity.y); // 멈추기
+                rigid.linearVelocityX = 0f;
             }
         }
 
@@ -78,22 +83,24 @@ public class PlayerController : MonoBehaviour
 
         // 점프 중이 아닐 때에만 
         // 대시 입력 처리 (쿨타임이 0 이하일 때만)
-    if (Input.GetKeyDown(KeyCode.X) && dashTime <= 0 && dashCooldownTimer <= 0 && !isGrap)
-    {
-        isDash = true;
-        dashTime = defaultTime;
+        if (Input.GetKeyDown(KeyCode.X) && dashTime <= 0 && dashCooldownTimer <= 0 && !isGrap)
+        {
+            isDash = true;
+            dashTime = defaultTime;
 
-        // 대시 방향 설정 (입력이 없으면 마지막 방향 사용)
-        Vector2 dashDirection = (h != 0) ? new Vector2(h, 0f).normalized : lastMoveDirection;
+            // 대시 방향 설정 (입력이 없으면 마지막 방향 사용)
+            //Vector2 dashDirection = (h != 0) ? new Vector2(h, 0f).normalized : lastMoveDirection;
+            Vector2 dashDirection = (h != 0) ? new Vector2(h, 0f).normalized : lastMoveDirection;
 
-        // 중력을 0으로 처리 (대시 중에는 밑으로 떨어지지 않게!)
-        rigid.gravityScale = 0;
-        // 대시 실행
-        rigid.linearVelocity = new Vector2(dashDirection.x * dashSpeed, 0f);
+            // 중력을 0으로 처리 (대시 중에는 밑으로 떨어지지 않게!)
+            rigid.gravityScale = 0;
+            // 대시 실행
+            rigid.linearVelocity = new Vector2(dashDirection.x * dashSpeed, 0f);
+            //rigid.linearVelocityX = dashDirection.x * dashSpeed;
 
-        // 대시 후 쿨타임 시작
-        dashCooldownTimer = dashCooldown;
-    }
+            // 대시 후 쿨타임 시작
+            dashCooldownTimer = dashCooldown;
+        }
 
         // 대쉬 실행 및 종료 처리
         if (isDash)
@@ -105,7 +112,8 @@ public class PlayerController : MonoBehaviour
             {
                 isDash = false;
                 rigid.gravityScale = gravity; // 대시가 끝나면 중력 다시 되돌려 주기
-                rigid.linearVelocity = new Vector2(0, rigid.linearVelocity.y); // 대시 후 멈추기
+                //rigid.linearVelocity = new Vector2(0, rigid.linearVelocity.y); // 대시 후 멈추기
+                rigid.linearVelocityX = 0f;
             }
         }
 
@@ -113,12 +121,13 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Z) && jumpCount < 2 && !isDead)
         {
             jumpCount++;
-            rigid.linearVelocity = new Vector2(rigid.linearVelocity.x, 0); // 기존 속도 초기화
+            //rigid.linearVelocity = new Vector2(rigid.linearVelocity.x, 0); // 기존 속도 초기화
+            rigid.linearVelocityY = 0f;
             rigid.AddForce(new Vector2(0, jumpForce));
         }
-        else if (Input.GetKeyDown(KeyCode.Z) && rigid.linearVelocity.y > 0)
+        else if (Input.GetKeyUp(KeyCode.Z) && rigid.linearVelocity.y > 0)
         {
-            rigid.linearVelocity *= new Vector2(1, 0.5f);
+            rigid.linearVelocity *= rigid.linearVelocityY = 0.5f;
         }
 
         if (jumpCount == 2)
@@ -196,7 +205,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Dead")
+        if (collision.tag == "Dead" && !isDead)
         {
             Die();
         }
@@ -210,7 +219,9 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
+        isDash = false;
         isDead = true;
+        rigid.gravityScale = gravity;
         rigid.linearVelocity = Vector2.zero;
         GameManager.instance.OnPlayerDead();
         anim.SetTrigger("isDead");

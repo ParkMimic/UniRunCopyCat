@@ -1,8 +1,6 @@
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using TMPro;
 using System.Threading;
 
 public class GameManager : MonoBehaviour
@@ -11,11 +9,14 @@ public class GameManager : MonoBehaviour
     public bool isGameover = false;
 
     private float deadCount = 0f;
-    private float levelCount;
+    public int levelCount;
+
+    public GameObject level_1;
 
     // 게임이 시작함과 동시에 Awake() 이벤트 메서드
     private void Awake()
     {
+        levelCount = 0;
         // 만약 instance가 null이라면
         if (instance == null)
         {
@@ -44,7 +45,7 @@ public class GameManager : MonoBehaviour
 
         if (levelCount == 1 && !isGameover)
         {
-
+            level_1.SetActive(true);
         }
     }
 
