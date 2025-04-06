@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
     public bool isGameover = false;
+    public bool isClear;
 
     private float deadCount = 0f;
     public int levelCount;

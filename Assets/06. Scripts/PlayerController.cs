@@ -205,7 +205,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Dead" && !isDead)
+        if (collision.tag == "Dead" && !isDead && gameObject.tag == "Player")
         {
             Die();
         }
@@ -214,6 +214,31 @@ public class PlayerController : MonoBehaviour
         {
             collision.GameObject().SetActive(false);
             GameManager.instance.OnTrigger();
+        }
+
+        if (collision.tag == "Trigger")
+        {
+            Debug.Log("Clear!");
+            GameManager.instance.isClear = true;
+        }
+    }
+
+    // 트리거를 밟고 있는 동안
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.tag == "Trigger")
+        {
+            gameObject.tag = "God"; // 무적 상태로 변경
+        }
+    }
+
+    // 만약 트리거에서 벗어나면
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        // 트리거의 이름이 트리거라면
+        if (collision.tag == "Trigger")
+        {
+            gameObject.tag = "Player"; // 무적 끝내기!
         }
     }
 
