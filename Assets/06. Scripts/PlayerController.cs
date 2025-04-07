@@ -46,6 +46,18 @@ public class PlayerController : MonoBehaviour
 
         isDead = false;
     }
+    private void FixedUpdate()
+    {
+        // 낙하 상태 체크
+        if (!isGrounded && rigid.linearVelocity.y < 0)
+        {
+            isFalling = true;
+        }
+        else
+        {
+            isFalling = false;
+        }
+    }
 
     void Update()
     {
@@ -160,10 +172,7 @@ public class PlayerController : MonoBehaviour
             rigid.linearVelocity = new Vector2(0f, rigid.linearVelocityY);
         }
 
-        // 낙하 상태 체크
-        isFalling = rigid.linearVelocity.y < 0;
-
-        // 애니메이션 설정
+            // 애니메이션 설정
         anim.SetBool("isGround", isGrounded);
         anim.SetBool("isWalk", isWalking);
         anim.SetBool("isFall", isFalling);
@@ -187,7 +196,7 @@ public class PlayerController : MonoBehaviour
             Vector2 normal = collision.contacts[0].normal;
 
             // 벽과 충돌한 경우 (수직 벽)
-            if (Mathf.Abs(normal.x) > 0.5f && Mathf.Abs(normal.y) < 0.5f && isGrounded == false)
+            if (Mathf.Abs(normal.x) > 0.5f && Mathf.Abs(normal.y) < 0.5f && isGrounded == false && !isDead)
             {
                 rigid.linearVelocity = lastMoveDirection;
                 isGrap = true;
@@ -201,6 +210,8 @@ public class PlayerController : MonoBehaviour
         {
             isGrounded = false;
         }
+
+        isGrounded = false;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -218,7 +229,6 @@ public class PlayerController : MonoBehaviour
 
         if (collision.tag == "Trigger")
         {
-            Debug.Log("Clear!");
             GameManager.instance.isClear = true;
         }
     }
@@ -245,6 +255,7 @@ public class PlayerController : MonoBehaviour
     void Die()
     {
         isDash = false;
+        isGrap = false;
         isDead = true;
         rigid.gravityScale = gravity;
         rigid.linearVelocity = Vector2.zero;

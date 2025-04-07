@@ -23,22 +23,37 @@ public class LaserMove : MonoBehaviour
         transform.Translate(XmoveSpeed * Time.deltaTime, YmoveSpeed * Time.deltaTime, 0);
 
         // 조건이 충족되었고, 아직 속도를 올리지 않았다면
-        if (GameManager.instance.levelCount == 1)
+        if (GameManager.instance.isClear == true && !isSpeedUp)
         {
-            if (GameManager.instance.isClear == true && !isSpeedUp)
-            {
-                XmoveSpeed *= 2f;
-                YmoveSpeed *= 2f;
-                isSpeedUp = true;
-            }
+            XmoveSpeed *= 4f;
+            YmoveSpeed *= 4f;
+            isSpeedUp = true;
+        }
 
-            // 도달하면 초기화
-            if (transform.position.x >= 28f)
-            {
-                GameManager.instance.isClear = false;
-                GameManager.instance.levelCount += 1;
-                gameObject.SetActive(false);
-            }
+        // 도달하면 초기화
+        if (transform.position.x >= 28f)
+        {
+            GameManager.instance.isClear = false;
+            GameManager.instance.OnTrigger();
+            gameObject.SetActive(false);
+        }
+        else if (transform.position.x <= -30f)
+        {
+            GameManager.instance.isClear = false;
+            GameManager.instance.OnTrigger();
+            gameObject.SetActive(false);
+        }
+        else if (transform.position.y <= -4f)
+        {
+            GameManager.instance.isClear = false;
+            GameManager.instance.OnTrigger();
+            gameObject.SetActive(false);
+        }
+        else if (transform.position.y >= 21f)
+        {
+            GameManager.instance.isClear = false;
+            GameManager.instance.OnTrigger();
+            gameObject.SetActive(false);
         }
     }
 }
