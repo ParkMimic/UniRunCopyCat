@@ -25,8 +25,8 @@ public class LaserMove : MonoBehaviour
         // 조건이 충족되었고, 아직 속도를 올리지 않았다면
         if (GameManager.instance.isClear == true && !isSpeedUp)
         {
-            XmoveSpeed *= 4f;
-            YmoveSpeed *= 4f;
+            XmoveSpeed *= 5f;
+            YmoveSpeed *= 5f;
             isSpeedUp = true;
         }
 
@@ -43,7 +43,7 @@ public class LaserMove : MonoBehaviour
             GameManager.instance.OnTrigger();
             gameObject.SetActive(false);
         }
-        else if (transform.position.y <= -4f)
+        else if (transform.position.y <= -5f)
         {
             GameManager.instance.isClear = false;
             GameManager.instance.OnTrigger();

@@ -7,12 +7,15 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
     public bool isGameover = false;
+    public bool isGameclear = false;
     public bool isClear;
 
     public bool isTrigged;
 
     private float deadCount = 0f;
     public int levelCount;
+
+    public GameObject GameClearUI;
 
     public GameObject level_1;
     public GameObject level_1_map;
@@ -26,12 +29,21 @@ public class GameManager : MonoBehaviour
     public GameObject level_3_map;
     public GameObject level_3_trigger;
 
+    public GameObject level_4;
+    public GameObject level_4_map;
+    public GameObject level_4_trigger;
+
     // 게임이 시작함과 동시에 Awake() 이벤트 메서드
     private void Awake()
     {
+        GameClearUI.SetActive(false);
+
         level_1_map.SetActive(true);
+        level_1_trigger.SetActive(true);
+
         level_2_map.SetActive(false);
         level_3_map.SetActive(false);
+        level_4_map.SetActive(false);
 
         levelCount = 0;
         // 만약 instance가 null이라면
@@ -82,6 +94,20 @@ public class GameManager : MonoBehaviour
             level_3_map.SetActive(true);
             level_3_trigger.SetActive(true);
         }
+        else if (levelCount == 4 && !isGameover)
+        {
+            level_3_map.SetActive(false);
+            level_3_trigger.SetActive(false);
+
+            level_4.SetActive(true);
+            level_4_map.SetActive(true);
+            level_4_trigger.SetActive(true);
+        }
+
+        if (isGameclear == true)
+        {
+
+        }
     }
 
     public void OnPlayerDead()
@@ -92,5 +118,16 @@ public class GameManager : MonoBehaviour
     public void OnTrigger()
     {
         levelCount += 1;
+    }
+
+    public void GameOver()
+    {
+
+    }
+
+    public void GameClear()
+    {
+        GameClearUI.SetActive(true);
+        isGameclear = true;
     }
 }
