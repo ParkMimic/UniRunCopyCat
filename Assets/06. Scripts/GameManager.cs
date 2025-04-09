@@ -9,6 +9,8 @@ public class GameManager : MonoBehaviour
     public bool isGameover = false;
     public bool isGameclear = false;
     public bool isClear;
+    public bool isRestart;
+    public bool isExit;
 
     public bool isTrigged;
 
@@ -104,9 +106,9 @@ public class GameManager : MonoBehaviour
             level_4_trigger.SetActive(true);
         }
 
-        if (isGameclear == true)
+        if (isGameover && Input.GetMouseButtonDown(0) || isGameover && Input.GetKeyDown("r"))
         {
-
+            SceneManager.LoadScene(0);
         }
     }
 
@@ -118,11 +120,6 @@ public class GameManager : MonoBehaviour
     public void OnTrigger()
     {
         levelCount += 1;
-    }
-
-    public void GameOver()
-    {
-
     }
 
     public void GameClear()

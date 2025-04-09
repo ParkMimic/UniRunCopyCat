@@ -34,10 +34,6 @@ public class PlayerController : MonoBehaviour
     private bool isRightPressed = false;
     private bool isDashPressed = false;
     private bool jumpRequest = false;
-    private bool jumpHeld = false;
-
-    private float jumpPressTime = 0f;
-    private float minJumpPressTime = 0.1f;
 
     private Vector2 lastMoveDirection = Vector2.right;
     private Rigidbody2D rigid;
@@ -75,14 +71,6 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Space))
         {
             jumpRequest = true;
-            jumpHeld = true;
-            jumpPressTime = Time.time;
-        }
-
-        if (Input.GetKeyUp(KeyCode.Z) || Input.GetKeyUp(KeyCode.Space))
-        {
-            if (Time.time - jumpPressTime > minJumpPressTime)
-                jumpHeld = false;
         }
 
         if (wallJumpCooldownTimer > 0f) wallJumpCooldownTimer -= Time.deltaTime;
@@ -142,10 +130,9 @@ public class PlayerController : MonoBehaviour
             jumpRequest = false;
         }
 
-        if (!jumpHeld && rigid.linearVelocity.y > 0f && !isGrounded)
+        if (Input.GetKeyUp("z") && rigid.linearVelocityY > 0)
         {
             rigid.linearVelocity = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.y * 0.5f);
-            jumpHeld = true; // 방지용
         }
 
         if (jumpCount == 2) isJumping = true;
@@ -285,15 +272,11 @@ public class PlayerController : MonoBehaviour
     public void JumpDown()
     {
         jumpRequest = true;
-        jumpHeld = true;
-        jumpPressTime = Time.time;
     }
     public void JumpUp()
     {
-        if (Time.time - jumpPressTime > minJumpPressTime)
-        {
-            jumpHeld = false;
-        }
+
+        rigid.linearVelocity = new Vector2(rigid.linearVelocity.x, rigid.linearVelocity.y * 0.5f);
     }
     public void DashClick() => isDashPressed = true;
 }
